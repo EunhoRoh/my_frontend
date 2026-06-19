@@ -1,0 +1,84 @@
+@import 'tailwindcss';
+
+@theme {
+  --animate-tree-idle: tree-idle 2.8s ease-in-out infinite;
+  --animate-tree-pop: tree-pop 0.65s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+  --animate-heart-float: heart-float 2.6s ease-in-out infinite;
+  --animate-heart-float-slow: heart-float 3.2s ease-in-out infinite;
+  --animate-heart-pulse: heart-pulse 1.8s ease-in-out infinite;
+}
+
+@keyframes tree-idle {
+  0%,
+  100% {
+    transform: translateY(0) rotate(-3deg);
+  }
+  25% {
+    transform: translateY(-10px) rotate(2deg);
+  }
+  50% {
+    transform: translateY(-5px) rotate(3deg);
+  }
+  75% {
+    transform: translateY(-12px) rotate(-2deg);
+  }
+}
+
+@keyframes heart-float {
+  0%,
+  100% {
+    transform: translateY(0) scale(1) rotate(-6deg);
+    opacity: 0.75;
+  }
+  50% {
+    transform: translateY(-14px) scale(1.2) rotate(6deg);
+    opacity: 1;
+  }
+}
+
+@keyframes heart-pulse {
+  0%,
+  100% {
+    transform: scale(0.9);
+    opacity: 0.7;
+  }
+  50% {
+    transform: scale(1.15);
+    opacity: 1;
+  }
+}
+
+@keyframes tree-pop {
+  0% {
+    transform: scale(1) rotate(0deg);
+  }
+  20% {
+    transform: scale(1.5) rotate(-5deg);
+  }
+  40% {
+    transform: scale(1.55) rotate(5deg);
+  }
+  60% {
+    transform: scale(0.9) rotate(-3deg);
+  }
+  80% {
+    transform: scale(1.08) rotate(2deg);
+  }
+  100% {
+    transform: scale(1) rotate(0deg);
+  }
+}
+
+.tree-character-image {
+  width: auto;
+  height: auto;
+  max-width: 100%;
+  image-rendering: auto;
+  image-rendering: high-quality;
+  transform: translateZ(0);
+  backface-visibility: hidden;
+}
+
+body {
+  margin: 0;
+}
