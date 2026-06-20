@@ -1,9 +1,5 @@
 import { useState } from 'react'
-import tree1 from './assets/tree-characters/tree_1.png'
-import tree2 from './assets/tree-characters/tree_2.png'
-import tree3 from './assets/tree-characters/tree_3.png'
-import tree4 from './assets/tree-characters/tree_4.png'
-import tree5 from './assets/tree-characters/tree_5.png'
+import TreeCharacter from './components/TreeCharacter'
 
 const GOAL_TALENT = 40
 
@@ -16,48 +12,34 @@ const DONATION_CODES = {
 const TREE_STAGES = [
   {
     min: 0,
-    image: tree1,
     icon: '🌱',
     label: '새싹 단계',
     description: '윙크 표정 새싹이 싹틔었어요!',
   },
   {
     min: 10,
-    image: tree2,
     icon: '🌿',
     label: '작은 묘목 단계',
     description: '뽀뽀 표정 묘목이 쑥쑥 자라요!',
   },
   {
     min: 20,
-    image: tree3,
     icon: '🌳',
     label: '좀 큰 나무 단계',
     description: '하트뿅뿅! 사랑 가득 작은 나무예요!',
   },
   {
     min: 30,
-    image: tree4,
     icon: '🍃',
     label: '푸릇한 나무 단계',
     description: '활짝 웃는 웅장한 나무가 되었어요!',
   },
   {
     min: 40,
-    image: tree5,
     icon: '🍎',
     label: '열매 달린 나무 단계',
     description: '행복 홍조! 열매 가득 열렸어요!',
   },
-]
-
-const FLOATING_HEARTS = [
-  { emoji: '💕', className: 'top-2 left-3 text-3xl animate-heart-float' },
-  { emoji: '💖', className: 'top-6 right-2 text-2xl animate-heart-float-slow [animation-delay:400ms]' },
-  { emoji: '💗', className: 'bottom-10 left-1 text-2xl animate-heart-pulse [animation-delay:200ms]' },
-  { emoji: '💝', className: 'bottom-14 right-4 text-3xl animate-heart-float [animation-delay:800ms]' },
-  { emoji: '✨', className: 'top-1/2 left-0 text-xl animate-heart-pulse [animation-delay:600ms]' },
-  { emoji: '✨', className: 'top-1/3 right-0 text-lg animate-heart-float-slow [animation-delay:1000ms]' },
 ]
 
 function getTreeStage(total) {
@@ -68,41 +50,10 @@ function getTreeStage(total) {
   return { ...TREE_STAGES[0], index: 0 }
 }
 
-function TreeCharacter({ stage, isPopping, onPopEnd }) {
-  const animationClass = isPopping ? 'animate-tree-pop' : 'animate-tree-idle'
-
-  return (
-    <div className="relative flex justify-center items-end mb-8 w-full max-w-xs mx-auto">
-      <div className="pointer-events-none absolute inset-0" aria-hidden="true">
-        {FLOATING_HEARTS.map((heart, index) => (
-          <span
-            key={`${heart.emoji}-${index}`}
-            className={`absolute drop-shadow-md select-none ${heart.className}`}
-          >
-            {heart.emoji}
-          </span>
-        ))}
-      </div>
-
-      <div
-        className={`relative origin-bottom max-w-full ${animationClass}`}
-        onAnimationEnd={isPopping ? onPopEnd : undefined}
-      >
-        <img
-          src={stage.image}
-          alt={stage.label}
-          className="tree-character-image w-auto h-auto drop-shadow-[0_20px_35px_rgba(16,185,129,0.35)] select-none"
-        />
-      </div>
-    </div>
-  )
-}
-
 function App() {
   const [totalTalent, setTotalTalent] = useState(0)
   const [code, setCode] = useState('')
   const [showError, setShowError] = useState(false)
-  const [isPopping, setIsPopping] = useState(false)
 
   const stage = getTreeStage(totalTalent)
   const progress = Math.min((totalTalent / GOAL_TALENT) * 100, 100)
@@ -117,13 +68,8 @@ function App() {
     }
 
     setShowError(false)
-    setIsPopping(true)
     setTotalTalent((prev) => prev + amount)
     setCode('')
-  }
-
-  const handlePopEnd = () => {
-    setIsPopping(false)
   }
 
   const handleKeyDown = (e) => {
@@ -156,11 +102,7 @@ function App() {
         {/* 중앙 - 3D 캐릭터 나무 단계 */}
         <div className="px-6 py-8">
           <div className="border-2 border-dashed border-emerald-200 rounded-2xl bg-white/70 px-4 py-8 overflow-visible text-center transition-all duration-500">
-            <TreeCharacter
-              stage={stage}
-              isPopping={isPopping}
-              onPopEnd={handlePopEnd}
-            />
+            <TreeCharacter talent={totalTalent} />
             <p className="text-emerald-800 font-semibold text-lg">
               {stage.icon} {stage.label}
             </p>

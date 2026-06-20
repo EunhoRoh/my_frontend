@@ -2,10 +2,21 @@
 
 @theme {
   --animate-tree-idle: tree-idle 2.8s ease-in-out infinite;
+  --animate-tree-breathe: tree-breathe 3.2s ease-in-out infinite;
   --animate-tree-pop: tree-pop 0.65s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
   --animate-heart-float: heart-float 2.6s ease-in-out infinite;
   --animate-heart-float-slow: heart-float 3.2s ease-in-out infinite;
   --animate-heart-pulse: heart-pulse 1.8s ease-in-out infinite;
+}
+
+@keyframes tree-breathe {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.04);
+  }
 }
 
 @keyframes tree-idle {
@@ -76,7 +87,10 @@
   image-rendering: auto;
   image-rendering: high-quality;
   transform: translateZ(0);
+  transform-origin: bottom center;
   backface-visibility: hidden;
+  filter: drop-shadow(0 14px 22px rgba(16, 70, 45, 0.28))
+    drop-shadow(0 6px 10px rgba(16, 70, 45, 0.16));
 }
 
 body {
