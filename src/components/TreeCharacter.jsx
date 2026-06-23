@@ -28,7 +28,7 @@ const TreeCharacter = ({ talent }) => {
       <img
         src={stage.image}
         alt={stage.label}
-        className="tree-character-image animate-tree-breathe w-[300px] max-w-full h-auto select-none"
+        className="tree-character-image animate-tree-breathe w-[380px] max-w-full h-auto select-none"
       />
     </div>
   )

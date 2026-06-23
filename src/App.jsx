@@ -1,13 +1,8 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import TreeCharacter from './components/TreeCharacter'
+import { loadCodeState, redeemCode } from './utils/codeStorage'
 
 const GOAL_TALENT = 40
-
-const DONATION_CODES = {
-  '사랑새싹-03': 1,
-  '희락미소-12': 2,
-  '성령대폭발-99': 5,
-}
 
 const TREE_STAGES = [
   {
@@ -42,6 +37,17 @@ const TREE_STAGES = [
   },
 ]
 
+const ERROR_MESSAGES = {
+  invalid: {
+    title: '올바른 기부 코드가 아닙니다!',
+    description: '코드를 다시 확인해 주세요.',
+  },
+  used: {
+    title: '이미 사용된 코드입니다!',
+    description: '이 코드는 한 번만 사용할 수 있어요.',
+  },
+}
+
 function getTreeStage(total) {
   if (total >= 40) return { ...TREE_STAGES[4], index: 4 }
   if (total >= 30) return { ...TREE_STAGES[3], index: 3 }
@@ -53,22 +59,32 @@ function getTreeStage(total) {
 function App() {
   const [totalTalent, setTotalTalent] = useState(0)
   const [code, setCode] = useState('')
-  const [showError, setShowError] = useState(false)
+  const [errorType, setErrorType] = useState(null)
+  const [codeState, setCodeState] = useState(null)
+
+  useEffect(() => {
+    loadCodeState()
+      .then(setCodeState)
+      .catch(() => setErrorType('invalid'))
+  }, [])
 
   const stage = getTreeStage(totalTalent)
   const progress = Math.min((totalTalent / GOAL_TALENT) * 100, 100)
+  const errorMessage = errorType ? ERROR_MESSAGES[errorType] : null
 
   const handleDonate = () => {
-    const trimmed = code.trim()
-    const amount = DONATION_CODES[trimmed]
+    if (!codeState) return
 
-    if (!amount) {
-      setShowError(true)
+    const result = redeemCode(codeState, code)
+
+    if (!result.ok) {
+      setErrorType(result.reason)
       return
     }
 
-    setShowError(false)
-    setTotalTalent((prev) => prev + amount)
+    setErrorType(null)
+    setCodeState(result.state)
+    setTotalTalent((prev) => prev + result.amount)
     setCode('')
   }
 
@@ -78,7 +94,7 @@ function App() {
 
   return (
     <div className="min-h-svh bg-gradient-to-b from-emerald-50 via-white to-amber-50 flex items-center justify-center p-4">
-      <div className="w-full max-w-sm bg-white rounded-3xl shadow-xl shadow-emerald-100/60 border border-emerald-100">
+      <div className="w-full max-w-md bg-white rounded-3xl shadow-xl shadow-emerald-100/60 border border-emerald-100">
         {/* 상단 */}
         <div className="bg-gradient-to-r from-emerald-500 to-teal-500 px-6 py-7 text-white text-center rounded-t-3xl">
           <h1 className="text-lg font-bold leading-snug">
@@ -128,16 +144,18 @@ function App() {
             value={code}
             onChange={(e) => {
               setCode(e.target.value)
-              if (showError) setShowError(false)
+              if (errorType) setErrorType(null)
             }}
             onKeyDown={handleKeyDown}
             placeholder="예: 사랑새싹-03"
-            className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 text-gray-800 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:border-transparent transition"
+            disabled={!codeState}
+            className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 text-gray-800 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:border-transparent transition disabled:opacity-50"
           />
           <button
             type="button"
             onClick={handleDonate}
-            className="w-full py-3.5 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 text-white font-bold text-base shadow-md shadow-emerald-200 hover:from-emerald-600 hover:to-teal-600 active:scale-[0.98] transition-all"
+            disabled={!codeState}
+            className="w-full py-3.5 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 text-white font-bold text-base shadow-md shadow-emerald-200 hover:from-emerald-600 hover:to-teal-600 active:scale-[0.98] transition-all disabled:opacity-50 disabled:cursor-not-allowed"
           >
             기부하기
           </button>
@@ -145,25 +163,25 @@ function App() {
       </div>
 
       {/* 경고 모달 */}
-      {showError && (
+      {errorMessage && (
         <div
           className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/30 backdrop-blur-sm"
-          onClick={() => setShowError(false)}
+          onClick={() => setErrorType(null)}
         >
           <div
             className="bg-white rounded-2xl shadow-2xl px-6 py-5 max-w-xs w-full text-center animate-[fadeIn_0.2s_ease-out]"
             onClick={(e) => e.stopPropagation()}
           >
-            <p className="text-3xl mb-3">😢</p>
+            <p className="text-3xl mb-3">{errorType === 'used' ? '🔒' : '😢'}</p>
             <p className="text-gray-800 font-semibold text-base">
-              올바른 기부 코드가 아닙니다!
+              {errorMessage.title}
             </p>
             <p className="text-gray-500 text-sm mt-1">
-              코드를 다시 확인해 주세요.
+              {errorMessage.description}
             </p>
             <button
               type="button"
-              onClick={() => setShowError(false)}
+              onClick={() => setErrorType(null)}
               className="mt-4 w-full py-2.5 rounded-xl bg-emerald-500 text-white font-medium hover:bg-emerald-600 transition"
             >
               확인
