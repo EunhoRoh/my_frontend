@@ -5,7 +5,7 @@ import reactRefresh from 'eslint-plugin-react-refresh'
 import { defineConfig, globalIgnores } from 'eslint/config'
 
 export default defineConfig([
-  globalIgnores(['dist']),
+  globalIgnores(['dist', 'backend', 'backend_venv']),
   {
     files: ['**/*.{js,jsx}'],
     extends: [
@@ -17,5 +17,10 @@ export default defineConfig([
       globals: globals.browser,
       parserOptions: { ecmaFeatures: { jsx: true } },
     },
+  },
+  {
+    // Node scripts (build tooling) run outside the browser.
+    files: ['scripts/**/*.js', '*.config.js'],
+    languageOptions: { globals: globals.node },
   },
 ])

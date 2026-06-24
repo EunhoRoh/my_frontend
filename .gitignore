@@ -12,6 +12,19 @@ dist
 dist-ssr
 *.local
 
+# Python / Django backend
+backend_venv/
+__pycache__/
+*.py[cod]
+backend/db.sqlite3
+backend/staticfiles/
+backend/.env
+
+# Frontend env (keep .env.development and *.example committed)
+.env
+.env.production
+.env.local
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json

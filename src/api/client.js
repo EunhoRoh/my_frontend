@@ -1,0 +1,67 @@
+// Base URL of the Django API. Override in production via VITE_API_URL.
+const API_BASE = import.meta.env.VITE_API_URL ?? 'http://127.0.0.1:8000/api'
+
+const TOKEN_KEY = 'hst_token'
+
+export function getToken() {
+  return localStorage.getItem(TOKEN_KEY)
+}
+
+export function setToken(token) {
+  if (token) localStorage.setItem(TOKEN_KEY, token)
+  else localStorage.removeItem(TOKEN_KEY)
+}
+
+class ApiError extends Error {
+  constructor(message, status, data) {
+    super(message)
+    this.status = status
+    this.data = data
+  }
+}
+
+function extractMessage(data) {
+  if (!data) return '요청을 처리할 수 없습니다.'
+  if (typeof data === 'string') return data
+  if (data.detail) return data.detail
+  // DRF field errors: { field: ["msg"] }
+  const first = Object.values(data)[0]
+  if (Array.isArray(first)) return first[0]
+  if (typeof first === 'string') return first
+  return '요청을 처리할 수 없습니다.'
+}
+
+export async function apiFetch(path, { method = 'GET', body, auth = true } = {}) {
+  const headers = { 'Content-Type': 'application/json' }
+  if (auth) {
+    const token = getToken()
+    if (token) headers.Authorization = `Token ${token}`
+  }
+
+  let response
+  try {
+    response = await fetch(`${API_BASE}${path}`, {
+      method,
+      headers,
+      body: body ? JSON.stringify(body) : undefined,
+    })
+  } catch {
+    throw new ApiError('서버에 연결할 수 없습니다. 잠시 후 다시 시도해 주세요.', 0, null)
+  }
+
+  if (response.status === 204) return null
+
+  let data = null
+  try {
+    data = await response.json()
+  } catch {
+    /* no body */
+  }
+
+  if (!response.ok) {
+    throw new ApiError(extractMessage(data), response.status, data)
+  }
+  return data
+}
+
+export { ApiError }
