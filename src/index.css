@@ -157,6 +157,12 @@
     drop-shadow(0 6px 10px rgba(16, 70, 45, 0.16));
 }
 
+.tree-character-image--animated,
+.community-tree-image--animated {
+  object-fit: contain;
+  object-position: bottom center;
+}
+
 body {
   margin: 0;
 }

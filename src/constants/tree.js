@@ -1,10 +1,13 @@
-import tree1 from '../assets/tree-characters/tree_1.png'
+import tree1 from '../assets/tree-characters/stage1.gif'
 import tree2 from '../assets/tree-characters/tree_2.png'
 import tree3 from '../assets/tree-characters/tree_3.png'
 import tree4 from '../assets/tree-characters/tree_4.png'
 import tree5 from '../assets/tree-characters/tree_5.png'
 
 export const TREE_IMAGES = [tree1, tree2, tree3, tree4, tree5]
+
+// true = animated GIF (CSS idle/breathe animations are skipped so the GIF can play)
+export const TREE_IMAGE_ANIMATED = [true, false, false, false, false]
 
 // Personal tree stages (driven by talent received from teachers)
 export const PERSONAL_STAGES = [
