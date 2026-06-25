@@ -4,10 +4,20 @@ import tree3 from '../assets/tree-characters/tree_3.png'
 import tree4 from '../assets/tree-characters/tree_4.png'
 import tree5 from '../assets/tree-characters/tree_5.png'
 
+// Personal tree images (used in the teacher view's per-student thumbnails)
 export const TREE_IMAGES = [tree1, tree2, tree3, tree4, tree5]
 
 // true = animated GIF (CSS idle/breathe animations are skipped so the GIF can play)
 export const TREE_IMAGE_ANIMATED = [true, false, false, false, false]
+
+// ── Community tree images (5 stages: 0% / 25% / 50% / 75% / 100% of the goal) ──
+// TODO: replace these with the dedicated community-tree GIFs once provided.
+//   1) drop the files into src/assets/community-tree/ (e.g. community_1.gif … community_5.gif)
+//   2) import them here and swap them into COMMUNITY_IMAGES below
+//   3) set COMMUNITY_IMAGE_ANIMATED[i] = true for each animated GIF
+// For now they reuse the personal images as placeholders so the app still runs.
+export const COMMUNITY_IMAGES = [tree1, tree2, tree3, tree4, tree5]
+export const COMMUNITY_IMAGE_ANIMATED = [true, false, false, false, false]
 
 // Personal tree stages (driven by talent received from teachers)
 export const PERSONAL_STAGES = [

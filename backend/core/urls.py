@@ -11,6 +11,7 @@ urlpatterns = [
 
     # shared
     path('community/', views.community),
+    path('community/display/', views.community_display),  # public, for event-day big screen
 
     # student
     path('student/dashboard/', views.StudentDashboard.as_view()),

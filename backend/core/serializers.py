@@ -1,7 +1,7 @@
 from django.contrib.auth import authenticate
 from rest_framework import serializers
 
-from .models import User, TalentGrant, Donation
+from .models import User, TalentGrant, Donation, DAILY_GRANT_LIMIT
 
 
 def tree_stage(total):
@@ -77,14 +77,19 @@ class StudentBriefSerializer(serializers.ModelSerializer):
     received_talent = serializers.IntegerField(read_only=True)
     donated_talent = serializers.IntegerField(read_only=True)
     balance = serializers.IntegerField(read_only=True)
+    received_today = serializers.IntegerField(read_only=True)
+    daily_limit = serializers.SerializerMethodField()
     stage = serializers.SerializerMethodField()
 
     class Meta:
         model = User
         fields = ['id', 'username', 'received_talent', 'donated_talent', 'balance',
-                  'stage', 'teacher', 'teacher_name']
+                  'received_today', 'daily_limit', 'stage', 'teacher', 'teacher_name']
 
     teacher_name = serializers.CharField(source='teacher.username', read_only=True, default=None)
+
+    def get_daily_limit(self, obj):
+        return DAILY_GRANT_LIMIT
 
     def get_stage(self, obj):
         return tree_stage(obj.received_talent)
@@ -108,3 +113,41 @@ class DonationSerializer(serializers.ModelSerializer):
         model = Donation
         fields = ['id', 'student', 'student_name', 'amount', 'message', 'created_at']
         read_only_fields = ['student']
+
+
+# Fun anonymous aliases — adjective + animal, e.g. "멋쟁이 사자".
+ALIAS_ADJECTIVES = [
+    '멋쟁이', '용감한', '따뜻한', '빛나는', '행복한', '사랑스런', '씩씩한', '친절한',
+    '상냥한', '든든한', '귀여운', '슬기로운', '반짝이는', '정다운', '너그러운', '포근한',
+]
+ALIAS_ANIMALS = [
+    '사자', '토끼', '곰', '여우', '사슴', '다람쥐', '펭귄', '고래',
+    '돌고래', '부엉이', '호랑이', '판다', '코알라', '수달', '햄스터', '고슴도치',
+]
+
+
+def donor_alias(donation_id):
+    """Deterministic, unlinkable alias from a donation id.
+
+    Same donation always yields the same name (stable across refreshes), while
+    different donations get different names — so repeat donors can't be tracked.
+    The adjective and animal are mixed independently so both vary from the very
+    first donation (not only after the list wraps around).
+    """
+    n = max(0, int(donation_id))
+    adj = ALIAS_ADJECTIVES[(n * 7 + 3) % len(ALIAS_ADJECTIVES)]
+    animal = ALIAS_ANIMALS[(n * 11 + 5) % len(ALIAS_ANIMALS)]
+    return f'{adj} {animal}'
+
+
+class PublicDonationSerializer(serializers.ModelSerializer):
+    """Anonymous donation for the community feed — never exposes the donor."""
+
+    donor_alias = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Donation
+        fields = ['id', 'donor_alias', 'amount', 'message', 'created_at']
+
+    def get_donor_alias(self, obj):
+        return donor_alias(obj.id)

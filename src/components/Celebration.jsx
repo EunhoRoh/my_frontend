@@ -17,6 +17,11 @@ const VARIANTS = {
     confetti: ['💖', '✨', '🌠', '💫'],
     ring: 'from-rose-300 to-amber-300',
   },
+  levelup: {
+    emoji: '🌳',
+    confetti: ['🌿', '✨', '🎉', '⭐', '🍃', '💚'],
+    ring: 'from-emerald-300 to-amber-300',
+  },
 }
 
 const Celebration = ({ show, variant = 'receive', title, subtitle, onDone, duration = 1800 }) => {
