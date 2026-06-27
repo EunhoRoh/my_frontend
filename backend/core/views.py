@@ -14,22 +14,21 @@ from .serializers import (
     PublicDonationSerializer, tree_stage,
 )
 
-# Community tree goal — how much donated talent fills the shared tree.
-COMMUNITY_GOAL = 100
+# Community tree growth — cumulative donated talent needed to reach each stage.
+#   1단계 → 2단계: +2  (누적 2)
+#   2단계 → 3단계: +3  (누적 5)
+#   3단계 → 4단계: +3  (누적 8)
+COMMUNITY_THRESHOLDS = [0, 2, 5, 8]
+COMMUNITY_GOAL = COMMUNITY_THRESHOLDS[-1]  # fully-grown total (8)
 
 
 def community_stage(total):
-    """Map community donated total to a 0-4 stage relative to the goal."""
-    ratio = total / COMMUNITY_GOAL if COMMUNITY_GOAL else 0
-    if ratio >= 1:
-        return 4
-    if ratio >= 0.75:
-        return 3
-    if ratio >= 0.5:
-        return 2
-    if ratio >= 0.25:
-        return 1
-    return 0
+    """Map community donated total to a 0-3 stage (4 stages)."""
+    stage = 0
+    for i, threshold in enumerate(COMMUNITY_THRESHOLDS):
+        if total >= threshold:
+            stage = i
+    return stage
 
 
 def auth_payload(user):

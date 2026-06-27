@@ -1,5 +1,8 @@
-# Render Blueprint — deploys the Django backend + a free PostgreSQL database.
-# Import this repo at https://dashboard.render.com → New → Blueprint.
+# Render Blueprint — deploys the Django backend only.
+# Database is an EXTERNAL free Postgres (Neon) — see DEPLOY.md.
+# Render's own free Postgres expires 30 days after creation, so we don't use it.
+# Import this repo at https://dashboard.render.com → New → Blueprint,
+# then paste the Neon connection string into DATABASE_URL.
 services:
   - type: web
     name: holy-spirit-tree-api
@@ -22,11 +25,6 @@ services:
         sync: false
       - key: CSRF_TRUSTED_ORIGINS
         sync: false
+      # External Neon Postgres connection string (incl. ?sslmode=require).
       - key: DATABASE_URL
-        fromDatabase:
-          name: holy-spirit-tree-db
-          property: connectionString
-
-databases:
-  - name: holy-spirit-tree-db
-    plan: free
+        sync: false

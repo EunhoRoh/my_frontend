@@ -15,10 +15,10 @@ function CommunityDisplayPage() {
     4000,
   )
 
-  const stage = data ? Math.min(4, Math.max(0, data.stage)) : 0
+  const stage = data ? Math.min(COMMUNITY_STAGES.length - 1, Math.max(0, data.stage)) : 0
   const info = COMMUNITY_STAGES[stage]
   const total = data?.total_donated ?? 0
-  const goal = data?.goal ?? 100
+  const goal = data?.goal ?? 8
   const donors = data?.donor_count ?? 0
   const progress = Math.min((total / goal) * 100, 100)
 
@@ -34,38 +34,39 @@ function CommunityDisplayPage() {
   }, [stage, data])
 
   return (
-    <div className="min-h-svh bg-gradient-to-b from-sky-50 via-emerald-50 to-amber-50 text-gray-800 flex flex-col items-center justify-center px-6 py-10 overflow-hidden">
-      <h1 className="text-emerald-700 font-extrabold tracking-tight text-3xl sm:text-5xl text-center">
+    <div className="min-h-svh bg-gradient-to-b from-sky-50 via-emerald-50 to-amber-50 text-gray-800 flex flex-col items-center justify-center px-6 py-4 overflow-hidden">
+      <h1 className="text-emerald-700 font-extrabold tracking-tight text-2xl sm:text-3xl text-center">
         🌳 우리 공동체 나무
       </h1>
-      <p className="mt-2 text-emerald-600/70 text-sm sm:text-xl text-center">
+      <p className="mt-1 text-emerald-600/70 text-xs sm:text-base text-center">
         함께 나눈 사랑이 나무를 키워요
       </p>
 
-      {/* 나무를 가장 크게 — 성장이 잘 보이도록 */}
-      <div className="my-6 sm:my-8 w-full max-w-3xl flex justify-center">
-        <CommunityTree stage={stage} size={440} />
+      {/* 나무를 가장 크게 — 성장이 잘 보이도록 (높이 기준 400) */}
+      <div className="my-3 sm:my-4 w-full max-w-5xl flex justify-center">
+        <CommunityTree stage={stage} height={420} />
       </div>
 
-      <p className="text-amber-600 font-extrabold text-2xl sm:text-4xl text-center">
+      <p className="text-amber-600 font-extrabold text-xl sm:text-3xl text-center">
         {info.icon} {info.label}
       </p>
-      <p className="mt-1 text-emerald-700/70 text-base sm:text-2xl text-center">
+      <p className="mt-1 text-emerald-700/70 text-sm sm:text-lg text-center">
         {info.description}
       </p>
 
       {/* 큰 숫자 */}
-      <div className="mt-6 text-center">
-        <p className="text-emerald-600 font-black leading-none text-6xl sm:text-8xl tabular-nums">
-          {total}
+      <div className="mt-2 text-center">
+        <p className="text-emerald-600 font-black leading-none tabular-nums">
+          <span className="text-5xl sm:text-7xl">{total}</span>
+          <span className="ml-2 text-2xl sm:text-4xl font-extrabold">달란트</span>
         </p>
-        <p className="mt-2 text-gray-500 text-lg sm:text-2xl">
-          / {goal} 달란트 · {donors}명의 마음이 모였어요
+        <p className="mt-1 text-gray-500 text-base sm:text-xl">
+          {donors}명의 마음이 모였어요
         </p>
       </div>
 
       {/* 진행바 */}
-      <div className="mt-5 w-full max-w-2xl">
+      <div className="mt-3 w-full max-w-2xl">
         <div className="h-5 sm:h-6 bg-white rounded-full overflow-hidden shadow-inner border border-emerald-100">
           <div
             className="h-full bg-gradient-to-r from-emerald-400 to-amber-400 rounded-full transition-all duration-700 ease-out"
