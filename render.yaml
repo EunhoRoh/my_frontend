@@ -5,7 +5,7 @@
 # then paste the Neon connection string into DATABASE_URL.
 services:
   - type: web
-    name: holy-spirit-tree-api
+    name: holytree-api
     runtime: python
     rootDir: backend
     plan: free
