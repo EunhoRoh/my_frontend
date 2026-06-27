@@ -3,6 +3,7 @@ import LoginPage from './pages/LoginPage'
 import StudentPage from './pages/StudentPage'
 import TeacherPage from './pages/TeacherPage'
 import AdminPage from './pages/AdminPage'
+import CommunityDisplayPage from './pages/CommunityDisplayPage'
 
 function FullScreen({ children }) {
   return (
@@ -12,8 +13,18 @@ function FullScreen({ children }) {
   )
 }
 
+// Event-day big screen: open with ?display (or #display). No login required.
+function isDisplayMode() {
+  return (
+    new URLSearchParams(window.location.search).has('display') ||
+    window.location.hash.replace('#', '').replace('/', '') === 'display'
+  )
+}
+
 function App() {
   const { user, loading } = useAuth()
+
+  if (isDisplayMode()) return <CommunityDisplayPage />
 
   if (loading) return <FullScreen>🌱 불러오는 중…</FullScreen>
   if (!user) return <LoginPage />

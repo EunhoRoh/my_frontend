@@ -6,12 +6,12 @@ from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from .models import User, TalentGrant, Donation
+from .models import User, TalentGrant, Donation, DAILY_GRANT_LIMIT
 from .permissions import IsTeacher, IsStudent, IsAdmin
 from .serializers import (
     RegisterSerializer, LoginSerializer, UserSerializer,
     StudentBriefSerializer, TalentGrantSerializer, DonationSerializer,
-    tree_stage,
+    PublicDonationSerializer, tree_stage,
 )
 
 # Community tree goal — how much donated talent fills the shared tree.
@@ -71,19 +71,34 @@ def me(request):
 
 # ---------------------------------------------------------------- community (any logged-in user)
 
-@api_view(['GET'])
-@permission_classes([IsAuthenticated])
-def community(request):
+def community_summary():
+    """Anonymous aggregate of the shared tree — never exposes who donated."""
     total = Donation.objects.aggregate(t=Sum('amount'))['t'] or 0
     donors = Donation.objects.values('student').distinct().count()
-    recent = Donation.objects.select_related('student')[:15]
-    return Response({
+    return {
         'total_donated': total,
         'goal': COMMUNITY_GOAL,
         'stage': community_stage(total),
         'donor_count': donors,
-        'recent_donations': DonationSerializer(recent, many=True).data,
+    }
+
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def community(request):
+    # Recent feed is anonymous: amount + message only, no donor identity.
+    recent = Donation.objects.all()[:15]
+    return Response({
+        **community_summary(),
+        'recent_donations': PublicDonationSerializer(recent, many=True).data,
     })
+
+
+@api_view(['GET'])
+@permission_classes([AllowAny])
+def community_display(request):
+    """Public read-only view for the event-day big screen (no login needed)."""
+    return Response(community_summary())
 
 
 # ---------------------------------------------------------------- student
@@ -161,6 +176,15 @@ class GrantView(APIView):
         if amount < 1:
             return Response({'detail': '1 달란트 이상 줄 수 있어요.'},
                             status=status.HTTP_400_BAD_REQUEST)
+
+        # 하루에 한 학생이 받을 수 있는 달란트는 최대 DAILY_GRANT_LIMIT 개.
+        received_today = student.received_today
+        if received_today + amount > DAILY_GRANT_LIMIT:
+            remaining = max(0, DAILY_GRANT_LIMIT - received_today)
+            return Response(
+                {'detail': f'오늘은 이 학생에게 최대 {DAILY_GRANT_LIMIT}개까지 줄 수 있어요. '
+                           f'(오늘 {received_today}개 지급 · {remaining}개 남음)'},
+                status=status.HTTP_400_BAD_REQUEST)
 
         grant = TalentGrant.objects.create(
             teacher=request.user,

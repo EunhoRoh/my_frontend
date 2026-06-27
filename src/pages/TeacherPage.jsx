@@ -1,12 +1,10 @@
 import { useState } from 'react'
 import { apiFetch } from '../api/client'
 import { usePolling } from '../hooks/usePolling'
-import { PERSONAL_STAGES } from '../constants/tree'
-import { TREE_IMAGES } from '../constants/tree'
 import AppHeader from '../components/AppHeader'
 import Celebration from '../components/Celebration'
 
-const QUICK_REASONS = ['예배에 집중했어요', '친구를 도왔어요', '말씀 암송', '봉사 참여', '기도 생활']
+const QUICK_REASONS = ['예배에 집중했어요', '친구를 도왔어요', '말씀 암송', '봉사 참여', '기도 생활', '워십을 함께 했어요']
 
 function TeacherPage() {
   const { data: students, refresh } = usePolling(() => apiFetch('/teacher/students/'), 8000)
@@ -20,6 +18,13 @@ function TeacherPage() {
   const [celebrate, setCelebrate] = useState(false)
 
   const openGrant = (student) => {
+    const limit = student.daily_limit ?? 15
+    const remaining = Math.max(0, limit - (student.received_today ?? 0))
+    if (remaining <= 0) {
+      setToast(`${student.username} 학생은 오늘 한도(${limit}개)를 다 받았어요. 내일 다시 줄 수 있어요!`)
+      setTimeout(() => setToast(null), 2800)
+      return
+    }
     setTarget(student)
     setAmount(1)
     setReason('')
@@ -65,8 +70,8 @@ function TeacherPage() {
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             {list.map((s) => {
-              const stage = Math.min(4, Math.max(0, s.stage))
-              const info = PERSONAL_STAGES[stage]
+              const limit = s.daily_limit ?? 15
+              const remaining = Math.max(0, limit - (s.received_today ?? 0))
               return (
                 <button
                   key={s.id}
@@ -74,18 +79,16 @@ function TeacherPage() {
                   onClick={() => openGrant(s)}
                   className="flex items-center gap-3 bg-white rounded-2xl border border-gray-100 shadow-sm hover:shadow-md hover:border-sky-200 active:scale-[0.99] transition px-4 py-3 text-left"
                 >
-                  <img
-                    src={TREE_IMAGES[stage]}
-                    alt=""
-                    className="w-14 h-14 object-contain shrink-0"
-                  />
                   <div className="min-w-0 flex-1">
                     <p className="font-bold text-gray-800 truncate">{s.username}</p>
-                    <p className="text-xs text-gray-400">{info.icon} {info.label}</p>
-                    <div className="mt-1 flex gap-3 text-xs">
+                    <div className="mt-1 flex flex-wrap gap-x-3 gap-y-0.5 text-xs">
                       <span className="text-emerald-600 font-semibold">받음 {s.received_talent}</span>
                       <span className="text-rose-500 font-semibold">기부 {s.donated_talent}</span>
+                      <span className="text-amber-600 font-semibold">보유 {s.balance}</span>
                     </div>
+                    <p className={`mt-0.5 text-[11px] ${remaining > 0 ? 'text-gray-400' : 'text-rose-400 font-medium'}`}>
+                      {remaining > 0 ? `오늘 ${remaining}개 더 줄 수 있어요` : '오늘 한도(15개)를 다 채웠어요'}
+                    </p>
                   </div>
                   <span className="shrink-0 text-sky-500 text-2xl font-light">＋</span>
                 </button>
@@ -108,6 +111,13 @@ function TeacherPage() {
             <h3 className="text-center font-bold text-gray-800 text-lg">
               {target.username} 에게 달란트 주기
             </h3>
+            <p className="mt-1 text-center text-sm text-gray-500">
+              오늘 남은 한도{' '}
+              <b className="text-sky-600">
+                {Math.max(0, (target.daily_limit ?? 15) - (target.received_today ?? 0))}
+              </b>
+              개 (하루 최대 {target.daily_limit ?? 15}개)
+            </p>
 
             <div className="mt-4 flex items-center justify-center gap-3">
               <button
@@ -120,7 +130,10 @@ function TeacherPage() {
               <span className="text-3xl font-extrabold text-sky-600 w-14 text-center">{amount}</span>
               <button
                 type="button"
-                onClick={() => setAmount((a) => Math.min(99, a + 1))}
+                onClick={() => setAmount((a) => Math.min(
+                  Math.max(1, (target.daily_limit ?? 15) - (target.received_today ?? 0)),
+                  a + 1,
+                ))}
                 className="w-10 h-10 rounded-full bg-gray-100 text-xl font-bold text-gray-600 active:scale-95"
               >
                 ＋
@@ -167,7 +180,7 @@ function TeacherPage() {
               <button
                 type="button"
                 onClick={handleGrant}
-                disabled={granting || amount < 1}
+                disabled={granting || amount < 1 || amount > Math.max(0, (target.daily_limit ?? 15) - (target.received_today ?? 0))}
                 className="flex-1 py-2.5 rounded-xl bg-gradient-to-r from-sky-500 to-emerald-500 text-white font-bold disabled:opacity-50"
               >
                 {granting ? '주는 중…' : `${amount} 달란트 주기`}

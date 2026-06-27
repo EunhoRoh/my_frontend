@@ -1,4 +1,4 @@
-import { TREE_IMAGES, TREE_IMAGE_ANIMATED } from '../constants/tree'
+import { COMMUNITY_IMAGES, COMMUNITY_IMAGE_ANIMATED } from '../constants/tree'
 
 /**
  * Community tree — visually distinct from the personal tree:
@@ -16,8 +16,8 @@ const SPARKLES = [
 
 const CommunityTree = ({ stage = 0, size = 240 }) => {
   const index = Math.max(0, Math.min(4, stage))
-  const image = TREE_IMAGES[index]
-  const isAnimated = TREE_IMAGE_ANIMATED[index]
+  const image = COMMUNITY_IMAGES[index]
+  const isAnimated = COMMUNITY_IMAGE_ANIMATED[index]
 
   return (
     <div className="relative flex justify-center items-end w-full overflow-visible">
@@ -39,7 +39,7 @@ const CommunityTree = ({ stage = 0, size = 240 }) => {
       <img
         src={image}
         alt={`공동체 나무 ${index + 1}단계`}
-        className={`community-tree-image relative z-10 h-auto max-w-full select-none${
+        className={`community-tree-image relative z-10 h-auto max-w-full select-none rounded-3xl${
           isAnimated ? ' community-tree-image--animated' : ' animate-tree-idle'
         }`}
         style={{ width: size }}
