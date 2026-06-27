@@ -93,7 +93,7 @@ function StudentPage() {
   const balance = d?.balance ?? 0
 
   const c = comm.data
-  const cStage = c ? Math.min(4, Math.max(0, c.stage)) : 0
+  const cStage = c ? Math.min(COMMUNITY_STAGES.length - 1, Math.max(0, c.stage)) : 0
   const communityInfo = COMMUNITY_STAGES[cStage]
   const cProgress = c ? Math.min((c.total_donated / c.goal) * 100, 100) : 0
 
@@ -209,7 +209,7 @@ function StudentPage() {
               <div className="flex items-center justify-between text-xs text-gray-500">
                 <span className="font-semibold text-gray-700">
                   {c?.total_donated ?? 0}
-                  <span className="text-gray-400"> / {c?.goal ?? 100} 달란트</span>
+                  <span className="text-gray-400"> / {c?.goal ?? 8} 달란트</span>
                 </span>
                 {c?.donor_count != null && <span>{c.donor_count}명 참여 💚</span>}
               </div>
