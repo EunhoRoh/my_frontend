@@ -1,4 +1,4 @@
-"""Populate demo data: 1 admin, 3 teachers, ~30 students, sample grants/donations."""
+"""Populate demo data: 1 admin, 2 teachers, 2 students, sample grants/donations."""
 
 from django.core.management.base import BaseCommand
 
@@ -22,7 +22,7 @@ class Command(BaseCommand):
         self.stdout.write(self.style.SUCCESS('관리자: 관리자 / admin1234'))
 
         teachers = []
-        for name in ['김선생', '이선생', '박선생']:
+        for name in ['김선생', '이선생']:
             t, _ = User.objects.get_or_create(username=name, defaults={'role': User.Role.TEACHER})
             t.role = User.Role.TEACHER
             t.set_password('teacher1234')
@@ -31,7 +31,7 @@ class Command(BaseCommand):
         self.stdout.write(self.style.SUCCESS(f'선생님 {len(teachers)}명 (비번: teacher1234)'))
 
         students = []
-        for i in range(1, 31):
+        for i in range(1, 3):
             name = f'학생{i:02d}'
             s, _ = User.objects.get_or_create(username=name, defaults={'role': User.Role.STUDENT})
             s.role = User.Role.STUDENT
