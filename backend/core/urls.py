@@ -26,4 +26,5 @@ urlpatterns = [
     path('admin/assign/', views.AssignStudent.as_view()),
     path('admin/set-role/', views.SetRole.as_view()),
     path('admin/stats/', views.AdminStats.as_view()),
+    path('admin/reset-talents/', views.ResetTalents.as_view()),
 ]

@@ -1,4 +1,5 @@
-from django.db.models import Sum
+from django.db.models import Sum, OuterRef, Subquery, IntegerField
+from django.db.models.functions import Coalesce
 from rest_framework import status
 from rest_framework.authtoken.models import Token
 from rest_framework.decorators import api_view, permission_classes
@@ -200,12 +201,28 @@ class AdminUsers(APIView):
     permission_classes = [IsAdmin]
 
     def get(self, request):
-        teachers = User.objects.filter(role=User.Role.TEACHER).order_by('username')
-        students = User.objects.filter(role=User.Role.STUDENT).order_by('username')
-        return Response({
-            'teachers': UserSerializer(teachers, many=True).data,
-            'students': StudentBriefSerializer(students, many=True).data,
-        })
+        teachers = list(
+            User.objects.filter(role=User.Role.TEACHER)
+            .order_by('username').values('id', 'username')
+        )
+        # 받은/기부 달란트를 학생별 개별 쿼리(N+1) 대신 서브쿼리로 한 번에 계산.
+        received_sq = (TalentGrant.objects.filter(student=OuterRef('pk'))
+                       .values('student').annotate(s=Sum('amount')).values('s'))
+        donated_sq = (Donation.objects.filter(student=OuterRef('pk'))
+                      .values('student').annotate(s=Sum('amount')).values('s'))
+        rows = (User.objects.filter(role=User.Role.STUDENT)
+                .annotate(
+                    received=Coalesce(Subquery(received_sq, output_field=IntegerField()), 0),
+                    donated=Coalesce(Subquery(donated_sq, output_field=IntegerField()), 0),
+                )
+                .order_by('username')
+                .values('id', 'username', 'received', 'donated', 'teacher'))
+        students = [{
+            'id': r['id'], 'username': r['username'],
+            'received_talent': r['received'], 'donated_talent': r['donated'],
+            'balance': r['received'] - r['donated'], 'teacher': r['teacher'],
+        } for r in rows]
+        return Response({'teachers': teachers, 'students': students})
 
 
 class AssignStudent(APIView):
@@ -246,6 +263,18 @@ class SetRole(APIView):
             user.teacher = None
         user.save()
         return Response(UserSerializer(user).data)
+
+
+class ResetTalents(APIView):
+    """달란트 지급·기부 데이터를 모두 삭제(계정은 유지). 관리자 전용."""
+    permission_classes = [IsAdmin]
+
+    def post(self, request):
+        grants = TalentGrant.objects.count()
+        donations = Donation.objects.count()
+        Donation.objects.all().delete()
+        TalentGrant.objects.all().delete()
+        return Response({'deleted_grants': grants, 'deleted_donations': donations})
 
 
 class AdminStats(APIView):

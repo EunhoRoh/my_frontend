@@ -50,6 +50,23 @@ function AdminPage() {
     }
   }
 
+  const resetData = async () => {
+    if (!window.confirm(
+      '모든 학생의 달란트·기부 데이터를 0으로 초기화할까요?\n계정은 그대로 유지됩니다. 되돌릴 수 없어요.'
+    )) return
+    setBusy('reset')
+    setError('')
+    try {
+      const r = await apiFetch('/admin/reset-talents/', { method: 'POST' })
+      await users.refresh()
+      window.alert(`초기화 완료 — 지급 ${r.deleted_grants}건 · 기부 ${r.deleted_donations}건 삭제됨`)
+    } catch (err) {
+      setError(err.message)
+    } finally {
+      setBusy(null)
+    }
+  }
+
   return (
     <div className="min-h-svh bg-gray-50 px-4 py-4">
       <div className="max-w-4xl mx-auto space-y-5">
@@ -133,6 +150,22 @@ function AdminPage() {
               ))}
             </ul>
           )}
+        </section>
+
+        {/* 데이터 초기화 */}
+        <section className="bg-white rounded-2xl border border-red-100 shadow-sm px-5 py-4">
+          <h2 className="font-bold text-red-600">데이터 초기화</h2>
+          <p className="text-xs text-gray-500 mt-1 mb-3">
+            모든 달란트·기부 기록을 0으로 되돌려요. 계정은 그대로 유지됩니다.
+          </p>
+          <button
+            type="button"
+            onClick={resetData}
+            disabled={busy === 'reset'}
+            className="px-4 py-2 rounded-xl bg-red-50 text-red-600 font-semibold text-sm hover:bg-red-100 active:scale-95 transition disabled:opacity-50"
+          >
+            {busy === 'reset' ? '초기화 중…' : '달란트·기부 초기화'}
+          </button>
         </section>
 
         <p className="text-xs text-gray-400 text-center">
