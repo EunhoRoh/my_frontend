@@ -41,11 +41,12 @@ export function AuthProvider({ children }) {
     return data.user
   }, [])
 
-  const logout = useCallback(async () => {
-    try {
-      await apiFetch('/auth/logout/', { method: 'POST' })
-    } catch {
-      /* ignore network errors on logout */
+  const logout = useCallback(() => {
+    // 서버 응답을 기다리지 않고 즉시 로그아웃 (서버 토큰 삭제는 백그라운드로).
+    // apiFetch가 헤더에 현재 토큰을 동기적으로 담은 뒤 요청을 보내므로,
+    // 바로 아래에서 토큰을 지워도 이 요청에는 토큰이 실린다.
+    if (getToken()) {
+      apiFetch('/auth/logout/', { method: 'POST' }).catch(() => {})
     }
     setToken(null)
     setUser(null)
