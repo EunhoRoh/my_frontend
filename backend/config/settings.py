@@ -98,6 +98,15 @@ AUTH_PASSWORD_VALIDATORS = [
      'OPTIONS': {'min_length': 4}},
 ]
 
+# 빠른 로그인/회원가입을 위해 가벼운 해시(MD5)를 사용한다.
+# 소규모 내부용(교회 행사·30명·2개월)이라 강한 PBKDF2(수십만 반복)는 과도하고,
+# 약한 CPU에서 로그인 지연의 주범이 된다.
+# 기존 PBKDF2 비밀번호도 그대로 로그인되며(접두사로 방식 인식), 로그인 시 자동으로 MD5로 전환된다.
+PASSWORD_HASHERS = [
+    'django.contrib.auth.hashers.MD5PasswordHasher',
+    'django.contrib.auth.hashers.PBKDF2PasswordHasher',
+]
+
 
 # Django REST Framework — token auth by default
 REST_FRAMEWORK = {
