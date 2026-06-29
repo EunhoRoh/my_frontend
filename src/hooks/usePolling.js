@@ -31,14 +31,21 @@ export function usePolling(fetcher, intervalMs = 5000, deps = []) {
 
   useEffect(() => {
     let active = true
+    // 백그라운드 탭(화면 잠금·앱 전환)에서는 폴링을 멈춰 서버 부하를 줄인다.
     const tick = () => {
-      if (active) refresh().catch(() => {})
+      if (active && !document.hidden) refresh().catch(() => {})
     }
     tick()
     const id = setInterval(tick, intervalMs)
+    // 다시 화면이 보이면 즉시 한 번 갱신
+    const onVisible = () => {
+      if (!document.hidden) tick()
+    }
+    document.addEventListener('visibilitychange', onVisible)
     return () => {
       active = false
       clearInterval(id)
+      document.removeEventListener('visibilitychange', onVisible)
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, deps)

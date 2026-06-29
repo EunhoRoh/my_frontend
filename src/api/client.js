@@ -39,14 +39,20 @@ export async function apiFetch(path, { method = 'GET', body, auth = true } = {})
   }
 
   let response
+  // 서버가 막혔을 때 무한 로딩 대신 60초 후 에러를 띄운다.
+  const controller = new AbortController()
+  const timeoutId = setTimeout(() => controller.abort(), 60000)
   try {
     response = await fetch(`${API_BASE}${path}`, {
       method,
       headers,
       body: body ? JSON.stringify(body) : undefined,
+      signal: controller.signal,
     })
   } catch {
     throw new ApiError('서버에 연결할 수 없습니다. 잠시 후 다시 시도해 주세요.', 0, null)
+  } finally {
+    clearTimeout(timeoutId)
   }
 
   if (response.status === 204) return null
