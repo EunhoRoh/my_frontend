@@ -22,8 +22,8 @@ function StatBox({ label, value, accent }) {
 }
 
 function StudentPage() {
-  const dash = usePolling(() => apiFetch('/student/dashboard/'), 5000)
-  const comm = usePolling(() => apiFetch('/community/'), 5000)
+  const dash = usePolling(() => apiFetch('/student/dashboard/'), 15000)
+  const comm = usePolling(() => apiFetch('/community/'), 15000)
 
   const [tab, setTab] = useState('home') // 'home' | 'community'
   const [pendingLevel, setPendingLevel] = useState(null) // 아직 축하하지 않은 레벨업 단계

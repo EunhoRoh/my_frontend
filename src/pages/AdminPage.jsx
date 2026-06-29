@@ -13,8 +13,8 @@ function StatCard({ label, value, accent }) {
 }
 
 function AdminPage() {
-  const { data: stats } = usePolling(() => apiFetch('/admin/stats/'), 8000)
-  const users = usePolling(() => apiFetch('/admin/users/'), 8000)
+  const { data: stats } = usePolling(() => apiFetch('/admin/stats/'), 12000)
+  const users = usePolling(() => apiFetch('/admin/users/'), 12000)
   const [busy, setBusy] = useState(null)
   const [error, setError] = useState('')
 

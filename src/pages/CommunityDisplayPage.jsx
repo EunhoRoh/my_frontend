@@ -12,7 +12,7 @@ import Celebration from '../components/Celebration'
 function CommunityDisplayPage() {
   const { data, error } = usePolling(
     () => apiFetch('/community/display/', { auth: false }),
-    4000,
+    10000,
   )
 
   const stage = data ? Math.min(COMMUNITY_STAGES.length - 1, Math.max(0, data.stage)) : 0

@@ -10,7 +10,8 @@ services:
     rootDir: backend
     plan: free
     buildCommand: "./build.sh"
-    startCommand: "gunicorn config.wsgi"
+    # 동시 처리량 확보: 워커 2 × 스레드 4 = 최대 8개 동시 요청 (폴링 부하 대응)
+    startCommand: "gunicorn config.wsgi --workers 2 --threads 4 --timeout 120"
     envVars:
       - key: PYTHON_VERSION
         value: "3.13.7"

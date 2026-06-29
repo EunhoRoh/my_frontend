@@ -7,7 +7,7 @@ import Celebration from '../components/Celebration'
 const QUICK_REASONS = ['예배에 집중했어요', '친구를 도왔어요', '말씀 암송', '봉사 참여', '기도 생활', '워십을 함께 했어요']
 
 function TeacherPage() {
-  const { data: students, refresh } = usePolling(() => apiFetch('/teacher/students/'), 8000)
+  const { data: students, refresh } = usePolling(() => apiFetch('/teacher/students/'), 12000)
 
   const [target, setTarget] = useState(null) // student being granted
   const [amount, setAmount] = useState(1)
