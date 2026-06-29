@@ -22,7 +22,8 @@ function StatBox({ label, value, accent }) {
 }
 
 function StudentPage() {
-  const dash = usePolling(() => apiFetch('/student/dashboard/'), 15000)
+  // 받은 달란트는 빠른 반영이 중요 → 5초. 공동체 나무는 15초(부하 절감).
+  const dash = usePolling(() => apiFetch('/student/dashboard/'), 5000)
   const comm = usePolling(() => apiFetch('/community/'), 15000)
 
   const [tab, setTab] = useState('home') // 'home' | 'community'
