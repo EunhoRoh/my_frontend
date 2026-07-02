@@ -110,7 +110,9 @@ class StudentDashboard(APIView):
         user = request.user
         received = user.received_talent
         grants = user.grants_received.select_related('teacher')[:20]
-        donations = user.donations.all()[:20]
+        # select_related('student'): 기부 목록의 student_name 조회가 항목마다 쿼리를
+        # 내지 않도록(N+1 방지) 조인해서 한 번에 가져온다.
+        donations = user.donations.select_related('student')[:20]
         return Response({
             'user': UserSerializer(user).data,
             'received_talent': received,
