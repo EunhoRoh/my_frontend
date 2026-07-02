@@ -50,6 +50,23 @@ function AdminPage() {
     }
   }
 
+  const removeUser = async (id, name, role) => {
+    const msg = role === 'teacher'
+      ? `${name} 선생님을 삭제할까요?\n이 선생님이 준 달란트 기록도 함께 사라지고, 담당 학생은 '담당 없음'이 됩니다.\n되돌릴 수 없어요.`
+      : `${name} 학생을 삭제할까요?\n이 학생의 받은 달란트·기부 기록도 함께 사라집니다.\n되돌릴 수 없어요.`
+    if (!window.confirm(msg)) return
+    setBusy(`del-${id}`)
+    setError('')
+    try {
+      await apiFetch('/admin/delete-user/', { method: 'POST', body: { user: id } })
+      await users.refresh()
+    } catch (err) {
+      setError(err.message)
+    } finally {
+      setBusy(null)
+    }
+  }
+
   const resetData = async () => {
     if (!window.confirm(
       '모든 학생의 달란트·기부 데이터를 0으로 초기화할까요?\n계정은 그대로 유지됩니다. 되돌릴 수 없어요.'
@@ -94,14 +111,24 @@ function AdminPage() {
               {teachers.map((t) => (
                 <li key={t.id} className="px-5 py-3 flex items-center justify-between gap-2">
                   <span className="font-semibold text-gray-800">{t.username}</span>
-                  <button
-                    type="button"
-                    onClick={() => setRole(t.id, 'student')}
-                    disabled={busy === `role-${t.id}`}
-                    className="text-xs px-3 py-1.5 rounded-lg bg-gray-100 text-gray-500 hover:bg-gray-200 disabled:opacity-50"
-                  >
-                    학생으로 변경
-                  </button>
+                  <div className="flex items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setRole(t.id, 'student')}
+                      disabled={busy === `role-${t.id}`}
+                      className="text-xs px-3 py-1.5 rounded-lg bg-gray-100 text-gray-500 hover:bg-gray-200 disabled:opacity-50"
+                    >
+                      학생으로 변경
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => removeUser(t.id, t.username, 'teacher')}
+                      disabled={busy === `del-${t.id}`}
+                      className="text-xs px-3 py-1.5 rounded-lg bg-red-50 text-red-500 hover:bg-red-100 disabled:opacity-50"
+                    >
+                      삭제
+                    </button>
+                  </div>
                 </li>
               ))}
             </ul>
@@ -144,6 +171,14 @@ function AdminPage() {
                       className="text-xs px-3 py-1.5 rounded-lg bg-sky-50 text-sky-600 hover:bg-sky-100 disabled:opacity-50"
                     >
                       선생님으로
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => removeUser(s.id, s.username, 'student')}
+                      disabled={busy === `del-${s.id}`}
+                      className="text-xs px-3 py-1.5 rounded-lg bg-red-50 text-red-500 hover:bg-red-100 disabled:opacity-50"
+                    >
+                      삭제
                     </button>
                   </div>
                 </li>

@@ -265,6 +265,28 @@ class SetRole(APIView):
         return Response(UserSerializer(user).data)
 
 
+class DeleteUser(APIView):
+    """선생님/학생 계정 삭제 (관리자 전용).
+
+    관리자·슈퍼유저 계정은 보호를 위해 삭제할 수 없다. 선생님을 삭제하면 그가 준
+    달란트 지급 기록은 함께 삭제되고(CASCADE), 담당 학생은 '담당 없음'이 된다(SET_NULL).
+    학생을 삭제하면 그 학생의 받은 지급·기부 기록도 함께 삭제된다(CASCADE).
+    """
+    permission_classes = [IsAdmin]
+
+    def post(self, request):
+        user = User.objects.filter(id=request.data.get('user')).first()
+        if not user:
+            return Response({'detail': '사용자를 찾을 수 없어요.'},
+                            status=status.HTTP_400_BAD_REQUEST)
+        if user.role == User.Role.ADMIN or user.is_superuser:
+            return Response({'detail': '관리자 계정은 삭제할 수 없어요.'},
+                            status=status.HTTP_400_BAD_REQUEST)
+        username = user.username
+        user.delete()
+        return Response({'deleted': username})
+
+
 class ResetTalents(APIView):
     """달란트 지급·기부 데이터를 모두 삭제(계정은 유지). 관리자 전용."""
     permission_classes = [IsAdmin]
