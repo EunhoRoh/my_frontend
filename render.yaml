@@ -9,6 +9,10 @@ services:
     runtime: python
     rootDir: backend
     plan: free
+    # DB(Neon)가 싱가포르(ap-southeast-1)에 있으므로 백엔드도 같은 지역에 둔다.
+    # 지역이 다르면 쿼리마다 미국↔싱가포르 왕복(~0.4초) 지연이 붙는다.
+    # 주의: Render는 기존 서비스의 지역을 못 바꾼다 — 이 값을 바꾸려면 서비스를 새로 만들어야 한다.
+    region: singapore
     buildCommand: "./build.sh"
     # 동시 처리량 확보: 워커 2 × 스레드 4 = 최대 8개 동시 요청 (폴링 부하 대응)
     startCommand: "gunicorn config.wsgi --workers 2 --threads 4 --timeout 120"
