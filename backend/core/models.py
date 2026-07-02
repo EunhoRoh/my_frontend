@@ -1,6 +1,7 @@
 from django.contrib.auth.models import AbstractUser
 from django.db import models
 from django.utils import timezone
+from django.utils.functional import cached_property
 
 # A student may receive at most this many talent per day (per teacher giving).
 DAILY_GRANT_LIMIT = 15
@@ -39,12 +40,17 @@ class User(AbstractUser):
     def is_teacher(self):
         return self.role == self.Role.TEACHER
 
-    @property
+    # received_talent / donated_talent 는 한 요청 안에서 여러 번(뷰·시리얼라이저의
+    # balance·stage 등) 참조된다. @property 로 두면 매 참조마다 집계 쿼리가 새로 나가
+    # 대시보드 한 번에 같은 값을 9번쯤 계산했다. @cached_property 로 인스턴스 수명(=요청
+    # 하나) 동안 결과를 재사용해 요청당 집계 쿼리를 2번으로 줄인다.
+    # 캐시는 요청이 끝나면 사라지므로(매 요청 사용자를 새로 로드) 최신 반영은 그대로다.
+    @cached_property
     def received_talent(self):
         """Total talent a student has received from teachers."""
         return self.grants_received.aggregate(total=models.Sum('amount'))['total'] or 0
 
-    @property
+    @cached_property
     def donated_talent(self):
         """Total talent a student has donated to the community tree."""
         return self.donations.aggregate(total=models.Sum('amount'))['total'] or 0
