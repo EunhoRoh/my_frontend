@@ -3,6 +3,12 @@ import { apiFetch } from '../api/client'
 import { usePolling } from '../hooks/usePolling'
 import AppHeader from '../components/AppHeader'
 
+function formatDateTime(iso) {
+  return new Date(iso).toLocaleString('ko-KR', {
+    month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit',
+  })
+}
+
 function StatCard({ label, value, accent }) {
   return (
     <div className="bg-white rounded-2xl border border-gray-100 shadow-sm px-4 py-3 text-center">
@@ -15,11 +21,13 @@ function StatCard({ label, value, accent }) {
 function AdminPage() {
   const { data: stats } = usePolling(() => apiFetch('/admin/stats/'), 12000)
   const users = usePolling(() => apiFetch('/admin/users/'), 12000)
+  const donations = usePolling(() => apiFetch('/admin/donations/'), 12000)
   const [busy, setBusy] = useState(null)
   const [error, setError] = useState('')
 
   const teachers = users.data?.teachers ?? []
   const students = users.data?.students ?? []
+  const donationList = donations.data ?? []
 
   const assign = async (studentId, teacherId) => {
     setBusy(studentId)
@@ -42,6 +50,23 @@ function AdminPage() {
     setError('')
     try {
       await apiFetch('/admin/set-role/', { method: 'POST', body: { user: userId, role } })
+      await users.refresh()
+    } catch (err) {
+      setError(err.message)
+    } finally {
+      setBusy(null)
+    }
+  }
+
+  const removeUser = async (id, name, role) => {
+    const msg = role === 'teacher'
+      ? `${name} 선생님을 삭제할까요?\n이 선생님이 준 달란트 기록도 함께 사라지고, 담당 학생은 '담당 없음'이 됩니다.\n되돌릴 수 없어요.`
+      : `${name} 학생을 삭제할까요?\n이 학생의 받은 달란트·기부 기록도 함께 사라집니다.\n되돌릴 수 없어요.`
+    if (!window.confirm(msg)) return
+    setBusy(`del-${id}`)
+    setError('')
+    try {
+      await apiFetch('/admin/delete-user/', { method: 'POST', body: { user: id } })
       await users.refresh()
     } catch (err) {
       setError(err.message)
@@ -94,14 +119,24 @@ function AdminPage() {
               {teachers.map((t) => (
                 <li key={t.id} className="px-5 py-3 flex items-center justify-between gap-2">
                   <span className="font-semibold text-gray-800">{t.username}</span>
-                  <button
-                    type="button"
-                    onClick={() => setRole(t.id, 'student')}
-                    disabled={busy === `role-${t.id}`}
-                    className="text-xs px-3 py-1.5 rounded-lg bg-gray-100 text-gray-500 hover:bg-gray-200 disabled:opacity-50"
-                  >
-                    학생으로 변경
-                  </button>
+                  <div className="flex items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setRole(t.id, 'student')}
+                      disabled={busy === `role-${t.id}`}
+                      className="text-xs px-3 py-1.5 rounded-lg bg-gray-100 text-gray-500 hover:bg-gray-200 disabled:opacity-50"
+                    >
+                      학생으로 변경
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => removeUser(t.id, t.username, 'teacher')}
+                      disabled={busy === `del-${t.id}`}
+                      className="text-xs px-3 py-1.5 rounded-lg bg-red-50 text-red-500 hover:bg-red-100 disabled:opacity-50"
+                    >
+                      삭제
+                    </button>
+                  </div>
                 </li>
               ))}
             </ul>
@@ -145,6 +180,44 @@ function AdminPage() {
                     >
                       선생님으로
                     </button>
+                    <button
+                      type="button"
+                      onClick={() => removeUser(s.id, s.username, 'student')}
+                      disabled={busy === `del-${s.id}`}
+                      className="text-xs px-3 py-1.5 rounded-lg bg-red-50 text-red-500 hover:bg-red-100 disabled:opacity-50"
+                    >
+                      삭제
+                    </button>
+                  </div>
+                </li>
+              ))}
+            </ul>
+          )}
+        </section>
+
+        {/* 기부 명단 (관리자 전용 · 실명) */}
+        <section className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+          <h2 className="px-5 py-4 font-bold text-rose-600 border-b border-gray-100">
+            기부 명단 ({donationList.length}건) · 관리자 전용
+          </h2>
+          <p className="px-5 pt-3 text-xs text-gray-400">
+            공동체 화면에는 익명으로 보이지만, 여기서는 실제 이름·금액·시각을 볼 수 있어요.
+          </p>
+          {donationList.length === 0 ? (
+            <p className="px-5 py-6 text-sm text-gray-400">아직 기부 내역이 없습니다.</p>
+          ) : (
+            <ul className="divide-y divide-gray-50 mt-2">
+              {donationList.map((d) => (
+                <li key={d.id} className="px-5 py-3 flex items-center justify-between gap-3">
+                  <div className="min-w-0">
+                    <span className="font-semibold text-gray-800">{d.student_name}</span>
+                    {d.message && (
+                      <span className="ml-2 text-xs text-gray-400">“{d.message}”</span>
+                    )}
+                  </div>
+                  <div className="shrink-0 text-right">
+                    <p className="font-bold text-rose-500">{d.amount} 달란트</p>
+                    <p className="text-[11px] text-gray-400">{formatDateTime(d.created_at)}</p>
                   </div>
                 </li>
               ))}

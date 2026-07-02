@@ -225,6 +225,21 @@ class AdminUsers(APIView):
         return Response({'teachers': teachers, 'students': students})
 
 
+class AdminDonations(APIView):
+    """관리자 전용: 기부 내역을 실명으로 조회(누가·얼마·언제).
+
+    공동체 피드(`/community/`)는 익명(별칭)으로만 노출되지만, 관리자는 운영·결산을
+    위해 실제 기부자 이름을 볼 수 있어야 한다. select_related로 이름 조회 N+1을 막고,
+    최근 200건까지 반환한다.
+    """
+    permission_classes = [IsAdmin]
+
+    def get(self, request):
+        donations = (Donation.objects.select_related('student')
+                     .order_by('-created_at')[:200])
+        return Response(DonationSerializer(donations, many=True).data)
+
+
 class AssignStudent(APIView):
     permission_classes = [IsAdmin]
 
@@ -263,6 +278,28 @@ class SetRole(APIView):
             user.teacher = None
         user.save()
         return Response(UserSerializer(user).data)
+
+
+class DeleteUser(APIView):
+    """선생님/학생 계정 삭제 (관리자 전용).
+
+    관리자·슈퍼유저 계정은 보호를 위해 삭제할 수 없다. 선생님을 삭제하면 그가 준
+    달란트 지급 기록은 함께 삭제되고(CASCADE), 담당 학생은 '담당 없음'이 된다(SET_NULL).
+    학생을 삭제하면 그 학생의 받은 지급·기부 기록도 함께 삭제된다(CASCADE).
+    """
+    permission_classes = [IsAdmin]
+
+    def post(self, request):
+        user = User.objects.filter(id=request.data.get('user')).first()
+        if not user:
+            return Response({'detail': '사용자를 찾을 수 없어요.'},
+                            status=status.HTTP_400_BAD_REQUEST)
+        if user.role == User.Role.ADMIN or user.is_superuser:
+            return Response({'detail': '관리자 계정은 삭제할 수 없어요.'},
+                            status=status.HTTP_400_BAD_REQUEST)
+        username = user.username
+        user.delete()
+        return Response({'deleted': username})
 
 
 class ResetTalents(APIView):
