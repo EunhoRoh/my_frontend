@@ -225,6 +225,21 @@ class AdminUsers(APIView):
         return Response({'teachers': teachers, 'students': students})
 
 
+class AdminDonations(APIView):
+    """관리자 전용: 기부 내역을 실명으로 조회(누가·얼마·언제).
+
+    공동체 피드(`/community/`)는 익명(별칭)으로만 노출되지만, 관리자는 운영·결산을
+    위해 실제 기부자 이름을 볼 수 있어야 한다. select_related로 이름 조회 N+1을 막고,
+    최근 200건까지 반환한다.
+    """
+    permission_classes = [IsAdmin]
+
+    def get(self, request):
+        donations = (Donation.objects.select_related('student')
+                     .order_by('-created_at')[:200])
+        return Response(DonationSerializer(donations, many=True).data)
+
+
 class AssignStudent(APIView):
     permission_classes = [IsAdmin]
 
