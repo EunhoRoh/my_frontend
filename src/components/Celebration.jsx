@@ -22,6 +22,12 @@ const VARIANTS = {
     confetti: ['🌿', '✨', '🎉', '⭐', '🍃', '💚'],
     ring: 'from-emerald-300 to-amber-300',
   },
+  // 달란트 상점에서 상인이 결제를 확인해 준 순간
+  purchase: {
+    emoji: '🎁',
+    confetti: ['🪙', '💰', '✨', '🎉', '🛍️'],
+    ring: 'from-amber-300 to-orange-400',
+  },
 }
 
 const Celebration = ({ show, variant = 'receive', title, subtitle, onDone, duration = 1800 }) => {

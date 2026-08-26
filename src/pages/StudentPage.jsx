@@ -5,6 +5,7 @@ import { COMMUNITY_STAGES, COMMUNITY_GOAL_FALLBACK } from '../constants/tree'
 import CommunityTree from '../components/CommunityTree'
 import Celebration from '../components/Celebration'
 import AppHeader from '../components/AppHeader'
+import StudentMarketPage from './StudentMarketPage'
 import { TONES, parseGrantReason } from '../constants/talentRules'
 
 // 기기 시간대와 무관하게 한국시간으로 표시한다(해외·설정 오류 단말에서 날짜가 어긋나지 않도록).
@@ -27,7 +28,12 @@ function StatBox({ label, value, accent }) {
 function StudentPage() {
   // 받은 달란트는 빠른 반영이 중요 → 5초. 공동체 나무는 15초(부하 절감).
   const dash = usePolling(() => apiFetch('/student/dashboard/'), 5000)
-  const comm = usePolling(() => apiFetch('/community/'), 15000)
+  // 달란트 시장에서는 기부가 멈춰 나무 값이 더 변하지 않는다. 시장 화면이 탭을 열 때
+  // 한 번만 직접 받아가므로 여기서는 폴링을 끈다.
+  const isMarket = dash.data?.mode === 'market'
+  const comm = usePolling(() => apiFetch('/community/'), 15000, [isMarket], {
+    enabled: !isMarket,
+  })
 
   const [tab, setTab] = useState('home') // 'home' | 'community'
   const [pendingLevel, setPendingLevel] = useState(null) // 아직 축하하지 않은 레벨업 단계
@@ -123,6 +129,11 @@ function StudentPage() {
   // tab에 따라 파생: 공동체 탭이면 축하 노출, 아니면 탭에 배지
   const treeGrew = pendingLevel != null && tab !== 'community'
   const showLevelUp = pendingLevel != null && tab === 'community'
+
+  // 달란트 시장의 날에는 화면을 통째로 갈아끼운다. 기존 화면은 그대로 두고
+  // 관리자가 모드를 되돌리면 다음 폴링(최대 5초)에 이 화면으로 돌아온다.
+  // 훅은 위에서 모두 실행된 뒤이므로 이 시점의 조기 반환은 안전하다.
+  if (isMarket) return <StudentMarketPage dash={dash} />
 
   return (
     <div className="min-h-svh bg-gradient-to-b from-emerald-50 via-white to-amber-50 px-4 pt-4 pb-24">
