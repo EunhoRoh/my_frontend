@@ -1,7 +1,7 @@
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
 
-from .models import User, TalentGrant, Donation
+from .models import User, TalentGrant, Donation, Purchase, SiteConfig
 
 
 @admin.register(User)
@@ -34,3 +34,22 @@ class TalentGrantAdmin(admin.ModelAdmin):
 class DonationAdmin(admin.ModelAdmin):
     list_display = ('student', 'amount', 'message', 'created_at')
     search_fields = ('student__username', 'message')
+
+
+@admin.register(Purchase)
+class PurchaseAdmin(admin.ModelAdmin):
+    list_display = ('student', 'amount', 'code', 'status', 'merchant', 'created_at', 'settled_at')
+    list_filter = ('status',)
+    search_fields = ('student__username', 'code')
+
+
+@admin.register(SiteConfig)
+class SiteConfigAdmin(admin.ModelAdmin):
+    list_display = ('mode', 'event_host')
+
+    def has_add_permission(self, request):
+        # 설정은 항상 한 행만 존재한다(get() 이 알아서 만든다).
+        return not SiteConfig.objects.exists()
+
+    def has_delete_permission(self, request, obj=None):
+        return False

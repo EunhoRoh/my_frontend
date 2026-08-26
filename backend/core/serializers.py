@@ -1,7 +1,7 @@
 from django.contrib.auth import authenticate
 from rest_framework import serializers
 
-from .models import User, TalentGrant, Donation
+from .models import User, TalentGrant, Donation, Purchase
 
 
 def tree_stage(total):
@@ -55,6 +55,7 @@ class UserSerializer(serializers.ModelSerializer):
     role_display = serializers.CharField(source='get_role_display', read_only=True)
     received_talent = serializers.IntegerField(read_only=True)
     donated_talent = serializers.IntegerField(read_only=True)
+    spent_talent = serializers.IntegerField(read_only=True)
     balance = serializers.IntegerField(read_only=True)
     stage = serializers.SerializerMethodField()
     teacher_name = serializers.CharField(source='teacher.username', read_only=True, default=None)
@@ -63,7 +64,7 @@ class UserSerializer(serializers.ModelSerializer):
         model = User
         fields = [
             'id', 'username', 'role', 'role_display',
-            'received_talent', 'donated_talent', 'balance', 'stage',
+            'received_talent', 'donated_talent', 'spent_talent', 'balance', 'stage',
             'teacher', 'teacher_name',
         ]
 
@@ -76,13 +77,14 @@ class StudentBriefSerializer(serializers.ModelSerializer):
 
     received_talent = serializers.IntegerField(read_only=True)
     donated_talent = serializers.IntegerField(read_only=True)
+    spent_talent = serializers.IntegerField(read_only=True)
     balance = serializers.IntegerField(read_only=True)
     stage = serializers.SerializerMethodField()
 
     class Meta:
         model = User
-        fields = ['id', 'username', 'received_talent', 'donated_talent', 'balance',
-                  'stage', 'teacher', 'teacher_name']
+        fields = ['id', 'username', 'received_talent', 'donated_talent', 'spent_talent',
+                  'balance', 'stage', 'teacher', 'teacher_name']
 
     teacher_name = serializers.CharField(source='teacher.username', read_only=True, default=None)
 
@@ -146,3 +148,28 @@ class PublicDonationSerializer(serializers.ModelSerializer):
 
     def get_donor_alias(self, obj):
         return donor_alias(obj.id)
+
+
+class PurchaseSerializer(serializers.ModelSerializer):
+    """아이 화면용 영수증. 상인이 확인했는지(status)를 폴링으로 지켜본다."""
+
+    status_display = serializers.CharField(source='get_status_display', read_only=True)
+    merchant_name = serializers.CharField(source='merchant.username', read_only=True, default=None)
+
+    class Meta:
+        model = Purchase
+        fields = ['id', 'amount', 'code', 'status', 'status_display',
+                  'merchant_name', 'created_at', 'settled_at']
+
+
+class MerchantPurchaseSerializer(serializers.ModelSerializer):
+    """상인 화면용 — 누가 냈는지 실명으로 보여준다."""
+
+    student_name = serializers.CharField(source='student.username', read_only=True)
+    status_display = serializers.CharField(source='get_status_display', read_only=True)
+    merchant_name = serializers.CharField(source='merchant.username', read_only=True, default=None)
+
+    class Meta:
+        model = Purchase
+        fields = ['id', 'student', 'student_name', 'amount', 'code',
+                  'status', 'status_display', 'merchant_name', 'created_at', 'settled_at']

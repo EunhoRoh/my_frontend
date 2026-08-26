@@ -7,6 +7,7 @@ import LoginPage from './pages/LoginPage'
 const StudentPage = lazy(() => import('./pages/StudentPage'))
 const TeacherPage = lazy(() => import('./pages/TeacherPage'))
 const AdminPage = lazy(() => import('./pages/AdminPage'))
+const MerchantPage = lazy(() => import('./pages/MerchantPage'))
 const CommunityDisplayPage = lazy(() => import('./pages/CommunityDisplayPage'))
 
 function FullScreen({ children }) {
@@ -31,6 +32,8 @@ function roleView(user) {
       return <TeacherPage />
     case 'admin':
       return <AdminPage />
+    case 'merchant':
+      return <MerchantPage />
     case 'student':
     default:
       return <StudentPage />

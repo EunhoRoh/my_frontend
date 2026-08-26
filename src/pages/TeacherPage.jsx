@@ -3,6 +3,7 @@ import { apiFetch } from '../api/client'
 import { usePolling } from '../hooks/usePolling'
 import AppHeader from '../components/AppHeader'
 import Celebration from '../components/Celebration'
+import EventPage from './EventPage'
 import { TALENT_CATEGORIES, TONES, ruleReason, parseGrantReason } from '../constants/talentRules'
 
 // 시간대를 한국으로 고정한다. 서버가 '오늘'을 한국시간 자정 기준으로 판단하므로,
@@ -110,6 +111,10 @@ function TeacherPage() {
       setCancelling(false)
     }
   }
+
+  // 달란트 시장의 날, 암송 이벤트 진행자는 '우리 반'이 아니라 전체 학생을 상대한다.
+  // 진행자가 누구인지는 관리자 설정(SiteConfig.event_host)이 정하고 서버가 알려준다.
+  if (data?.mode === 'market' && data?.is_event_host) return <EventPage />
 
   return (
     <div className="min-h-svh bg-gradient-to-b from-sky-50 via-white to-emerald-50 px-4 py-4">

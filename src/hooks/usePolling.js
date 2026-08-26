@@ -3,8 +3,12 @@ import { useEffect, useRef, useState, useCallback } from 'react'
 /**
  * Periodically fetches data via `fetcher` and returns { data, error, loading, refresh }.
  * Polling keeps the shared/community state fresh without WebSockets.
+ *
+ * `enabled: false` 면 주기 호출을 멈춘다. 값이 더 변하지 않는 화면(달란트 시장의
+ * 기부 나무처럼)이나 지금 보이지 않는 탭에서 요청을 통째로 없애기 위한 것이다.
+ * 이미 받아둔 data 는 그대로 남아 화면이 비지 않는다. refresh() 는 계속 쓸 수 있다.
  */
-export function usePolling(fetcher, intervalMs = 5000, deps = []) {
+export function usePolling(fetcher, intervalMs = 5000, deps = [], { enabled = true } = {}) {
   const [data, setData] = useState(null)
   const [error, setError] = useState(null)
   const [loading, setLoading] = useState(true)
@@ -36,6 +40,7 @@ export function usePolling(fetcher, intervalMs = 5000, deps = []) {
   }, [])
 
   useEffect(() => {
+    if (!enabled) return
     let active = true
     let inFlight = false
     // 백그라운드 탭(화면 잠금·앱 전환)에서는 폴링을 멈춰 서버 부하를 줄인다.
@@ -61,7 +66,7 @@ export function usePolling(fetcher, intervalMs = 5000, deps = []) {
       document.removeEventListener('visibilitychange', onVisible)
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, deps)
+  }, [...deps, enabled, intervalMs])
 
   return { data, error, loading, refresh, setData }
 }

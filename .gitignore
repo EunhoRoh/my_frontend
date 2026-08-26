@@ -25,6 +25,10 @@ backend/.env
 .env.production
 .env.local
 
+# 결산 산출물 — 실제 아이들 이름이 들어가므로 저장소에 올리지 않는다
+reports/
+donate_names/
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json

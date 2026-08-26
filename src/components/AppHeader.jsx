@@ -3,6 +3,7 @@ import { useAuth } from '../auth/useAuth'
 const ROLE_BADGE = {
   student: { label: '학생', cls: 'bg-emerald-100 text-emerald-700' },
   teacher: { label: '선생님', cls: 'bg-sky-100 text-sky-700' },
+  merchant: { label: '상인', cls: 'bg-orange-100 text-orange-700' },
   admin: { label: '관리자', cls: 'bg-amber-100 text-amber-700' },
 }
 
