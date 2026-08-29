@@ -11,6 +11,13 @@ const QUICK = [1, 2, 3, 5, 10]
 
 // 진동은 분위기를 살리는 보조 수단일 뿐이다. iOS 사파리는 지원하지 않으므로
 // 진동이 없어도 애니메이션·소리만으로 충분히 전달되도록 만들었다.
+function formatTime(iso) {
+  return new Date(iso).toLocaleTimeString('ko-KR', {
+    hour: '2-digit',
+    minute: '2-digit',
+  })
+}
+
 function buzz(pattern) {
   try {
     navigator.vibrate?.(pattern)
@@ -140,6 +147,7 @@ function StudentMarketPage({ dash }) {
   const balance = d?.balance ?? 0
   const purchases = useMemo(() => d?.purchases ?? [], [d?.purchases])
   const pending = purchases.find((p) => p.status === 'pending')
+  const settledHistory = purchases.filter((p) => p.status !== 'pending')
   const max = Math.min(balance, MAX_PAY)
 
   // 상인이 확인해 주기를 기다리는 결제를 추적한다. 대기가 사라진 순간
@@ -340,6 +348,36 @@ function StudentMarketPage({ dash }) {
                 {error}
               </p>
             )}
+
+            {/* 오늘 낸 내역 — 아이도 자기 소비를 돌아볼 수 있게 */}
+            {settledHistory.length > 0 && (
+              <div className="mt-4 rounded-3xl bg-white px-5 py-4 shadow-sm">
+                <p className="text-xs font-bold text-gray-400">내 결제 내역</p>
+                <ul className="mt-1 divide-y divide-gray-50">
+                  {settledHistory.map((p) => (
+                    <li key={p.id} className="flex items-center justify-between py-2 text-sm">
+                      <span
+                        className={`font-bold tabular-nums ${
+                          p.status === 'done' ? 'text-gray-700' : 'text-gray-300 line-through'
+                        }`}
+                      >
+                        {p.amount} 달란트
+                      </span>
+                      <span
+                        className={`text-xs font-medium ${
+                          p.status === 'done' ? 'text-emerald-600' : 'text-gray-400'
+                        }`}
+                      >
+                        {p.status === 'done'
+                          ? `✅ ${p.merchant_name ?? '확인 완료'}`
+                          : '↩️ 돌려받았어요'}
+                      </span>
+                      <span className="text-xs text-gray-300">{formatTime(p.created_at)}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
           </div>
         ) : (
           /* 기부 나무 — 보기 전용 */
@@ -366,6 +404,27 @@ function StudentMarketPage({ dash }) {
                 <p className="mt-1 text-xs text-gray-400">
                   오늘은 달란트 상점의 날이라 기부는 쉬어요 🌙
                 </p>
+
+                {/* 익명 기부 메시지 — 클래식 화면과 같은 피드를 보기 전용으로 */}
+                {c?.recent_donations?.length > 0 && (
+                  <ul className="mt-4 max-h-56 space-y-1.5 overflow-y-auto text-left">
+                    {c.recent_donations.map((don) => (
+                      <li key={don.id} className="rounded-xl bg-gray-50 px-3 py-2 text-xs">
+                        <div className="flex items-center justify-between text-gray-600">
+                          <span className="font-semibold text-gray-700">
+                            💫 {don.donor_alias}
+                          </span>
+                          <span className="font-semibold text-amber-600">
+                            {don.amount} 달란트
+                          </span>
+                        </div>
+                        {don.message && (
+                          <p className="mt-0.5 text-gray-400">“{don.message}”</p>
+                        )}
+                      </li>
+                    ))}
+                  </ul>
+                )}
               </>
             )}
           </div>
